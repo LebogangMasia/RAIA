@@ -5,6 +5,9 @@
 #include <cstdio>
 #include <iostream>
 
+typedef struct HashTableItem HashTableItem;
+typedef struct HashTable HashTable;
+
 struct HashTableItem {
     char* key;
     char* value;
