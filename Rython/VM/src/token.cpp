@@ -1,44 +1,46 @@
 #include "../include/token.hpp"
 
-
-
+// Tokenizes the given line buffer
 HashTable* Tokenize(char* lineBuffer) {
-    HashTable* __xLT__ = createTable(50000);
-    std::string __llBB__(lineBuffer);
-    std::string __CMT = __llBB__.substr(__llBB__.find("#") + 1);
-    std::vector<__xxTPT07__> __VTM__AS__ = {__xxTPT07__::IDENTIFIER, __xxTPT07__::OPERATOR, __xxTPT07__::LITERAL};
-    std::vector<__xxTPT07__> __CMT__ = {__xxTPT07__::COMMENT};
-    // the line buffer
-    std::vector<__xxTPT07__> __FRM_BF__ = Iden(lineBuffer);
-    if (__FRM_BF__ == __VTM__AS__) {
-        std::smatch m1;
-        std::smatch m4;
-        std::regex __xxTPT01__("\\w+\\s*(?==)");
-        std::regex __xxTPT04__("=(?=\\s*'|\\w)");
+    HashTable* tokenTable = createTable(50000);
+    std::string lineStr(lineBuffer);
+    std::string commentStr = lineStr.substr(lineStr.find("#") + 1);
+    std::vector<TokenType> validTypes = {TokenType::IDENTIFIER, TokenType::OPERATOR, TokenType::LITERAL};
+    std::vector<TokenType> commentType = {TokenType::COMMENT};
 
-        char* IDE;
-        char* OPE;
-        char* LIT;
-        if (std::regex_search(__llBB__, m1, __xxTPT01__)) {
-            std::string __lm(m1.str(0));
-            IDE = (char*) __lm.c_str();
-            HashTableInsert(__xLT__, "identifier", IDE);
+    std::vector<TokenType> bufferTypes = IdentifyTokens(lineBuffer);
+    if (bufferTypes == validTypes) {
+        std::smatch identifierMatch;
+        std::smatch operatorMatch;
+        std::regex identifierRegex("\\w+\\s*(?==)");
+        std::regex operatorRegex("=(?=\\s*'|\\w)");
+
+        char* identifier;
+        char* operatorChar;
+        char* literal;
+        
+        if (std::regex_search(lineStr, identifierMatch, identifierRegex)) {
+            std::string identifierStr(identifierMatch.str(0));
+            identifier = (char*)identifierStr.c_str();
+            HashTableInsert(tokenTable, "identifier", identifier);
         }
-        if (std::regex_search(__llBB__, m4, __xxTPT04__)) {
-            std::string __ldm(m4.str(0));
-            OPE = (char*) __ldm.c_str();
-            HashTableInsert(__xLT__, "operator", OPE);
+        
+        if (std::regex_search(lineStr, operatorMatch, operatorRegex)) {
+            std::string operatorStr(operatorMatch.str(0));
+            operatorChar = (char*)operatorStr.c_str();
+            HashTableInsert(tokenTable, "operator", operatorChar);
         }
-        std::string __STRLIT = __llBB__.substr(__llBB__.find("=") + 1);
-        LIT = (char*)__STRLIT.c_str();
-        if (LIT)
-            HashTableInsert(__xLT__, "literal", LIT);
-    } else if (__FRM_BF__ == __CMT__) {
-        char* COM = (char*)__CMT.c_str();
-        if (COM)
-            HashTableInsert(__xLT__, "comment", COM);
+        
+        std::string literalStr = lineStr.substr(lineStr.find("=") + 1);
+        literal = (char*)literalStr.c_str();
+        if (literal)
+            HashTableInsert(tokenTable, "literal", literal);
+    } 
+    else if (bufferTypes == commentType) {
+        char* comment = (char*)commentStr.c_str();
+        if (comment)
+            HashTableInsert(tokenTable, "comment", comment);
     }
 
-
-    return __xLT__;
+    return tokenTable;
 }
