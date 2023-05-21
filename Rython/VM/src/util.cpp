@@ -1,67 +1,61 @@
 #include "../include/util.hpp"
+#include <fstream>
+#include <sstream>
 
-char* readFile(char* path) {
-    // create file object
-    FILE* file = fopen(path, "r");
+char* readFile(const char* path) {
+    std::ifstream file(path, std::ios::in | std::ios::binary);
     if (!file) {
         printf("Could not open file: %s\n", path);
-        return NULL;
+        return nullptr;
     }
 
-    // get the file size;
-    fseek(file, 0, SEEK_END);
-    int size = ftell(file);
-    fseek(file, 0, SEEK_SET);
+    file.seekg(0, std::ios::end);
+    std::streampos fileSize = file.tellg();
+    file.seekg(0, std::ios::beg);
 
-    // open the file
-    char* buf = (char*) malloc(sizeof(char) * (size + 1));
-    if (!buf) {
-        printf("Could not allocate memory for the file\n");
-        return NULL;
-    }
-    fread(buf, 1, size, file);
-    buf[size] = '\0';
-    fclose(file);
+    char* buffer = new char[fileSize + 1];
+    file.read(buffer, fileSize);
+    buffer[fileSize] = '\0';
+    file.close();
 
-    // return the buffer
-    return buf;
+    return buffer;
 }
 
-std::ostream& operator << (std::ostream& os, const __xxTPT07__& obj) {
-    os << static_cast<std::underlying_type<__xxTPT07__>::type>(obj);
+std::ostream& operator<<(std::ostream& os, const TokenType& obj) {
+    os << static_cast<std::underlying_type<TokenType>::type>(obj);
     return os;
 }
 
-std::vector<__xxTPT07__> Iden(char* lineBuf) {
-    std::vector<__xxTPT07__> types;
-    std::string _StrLiBuf(lineBuf);
-    std::vector<std::regex> rgxs;
-    std::regex rgx1("\\w+[ ]*=[ ]*[a-z|A-Z|0-9|\"|']*"); // verbatim assignment
-    std::regex rgx2("#.*"); // comment
-    rgxs.push_back(rgx1);
-    rgxs.push_back(rgx2);
-    for (int i=0;i<rgxs.size();i++) {
-        std::smatch m;
-        while (std::regex_search(_StrLiBuf, m, rgxs[i])) {
-            if (i == 0) {
-                types.push_back(__xxTPT07__::IDENTIFIER);
-                types.push_back(__xxTPT07__::OPERATOR);
-                types.push_back(__xxTPT07__::LITERAL);
-            } else if (i == 1) {
-                types.push_back(__xxTPT07__::COMMENT);
+std::vector<TokenType> IdentifyTokens(const char* lineBuf) {
+    std::vector<TokenType> types;
+    std::string strLineBuf(lineBuf);
+    std::vector<std::regex> regexes;
+    regexes.emplace_back("\\w+[ ]*=[ ]*[a-z|A-Z|0-9|\"|']*"); // verbatim assignment
+    regexes.emplace_back("#.*"); // comment
+
+    for (const auto& regex : regexes) {
+        std::sregex_iterator it(strLineBuf.begin(), strLineBuf.end(), regex);
+        std::sregex_iterator end;
+        while (it != end) {
+            if (regex == regexes[0]) {
+                types.push_back(TokenType::IDENTIFIER);
+                types.push_back(TokenType::OPERATOR);
+                types.push_back(TokenType::LITERAL);
+            } else if (regex == regexes[1]) {
+                types.push_back(TokenType::COMMENT);
             }
-            _StrLiBuf = m.suffix().str();
+            ++it;
         }
     }
 
     return types;
 }
 
-
 char* intToChar(int a) {
     std::stringstream ss;
     ss << a;
     std::string temp_str = ss.str();
-    const char* ret = temp_str.c_str();
-    return (char*)ret;
+    char* ret = new char[temp_str.size() + 1];
+    std::strcpy(ret, temp_str.c_str());
+    return ret;
 }
